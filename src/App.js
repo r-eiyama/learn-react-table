@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components'
-import { useTable } from 'react-table'
+import {useTable, useSortBy} from 'react-table'
 import makeData from "./makeData";
 
 
@@ -34,7 +34,7 @@ const Styles = styled.div`
 `
 
 // テーブルを描画
-function Table({ columns, data }) {
+function Table({columns, data}) {
     // Use the state and functions returned from useTable to build your UI
     const {
         getTableProps,
@@ -42,26 +42,40 @@ function Table({ columns, data }) {
         headerGroups,
         rows,
         prepareRow,
-    } = useTable({
-        columns,
-        data,
-    });
-    console.log(headerGroups);
+    } = useTable(
+        {
+            columns,
+            data,
+        },
+        useSortBy
+    );
+
+    const firstPageRows = rows.slice(0, 20);
 
     // Render the UI for your table
     return (
+        <>
         <table {...getTableProps()}>
             <thead>
             {headerGroups.map(headerGroup => (
                 <tr {...headerGroup.getHeaderGroupProps()}>
                     {headerGroup.headers.map(column => (
-                        <th {...column.getHeaderProps()}>{column.render('Header')}</th>
+                        <th {...column.getHeaderProps(column.getSortByToggleProps())}>
+                            {column.render('Header')}
+                            <span>
+                                {column.isSorted
+                                ? column.isSortedDesc
+                                 ? '▼'
+                                : '▲'
+                                : ''}
+                            </span>
+                        </th>
                     ))}
                 </tr>
             ))}
             </thead>
             <tbody {...getTableBodyProps()}>
-            {rows.map((row, i) => {
+            {firstPageRows.map((row, i) => {
                 prepareRow(row)
                 return (
                     <tr {...row.getRowProps()}>
@@ -73,6 +87,11 @@ function Table({ columns, data }) {
             })}
             </tbody>
         </table>
+        <br />
+            <div>
+                Showing the first 20 result of {rows.length} row
+            </div>
+            </>
     )
 }
 
@@ -117,11 +136,11 @@ function App() {
         []
     )
 
-    const data = React.useMemo(() => makeData(20), [])
+    const data = React.useMemo(() => makeData(2000), [])
 
     return (
         <Styles>
-            <Table columns={columns} data={data} />
+            <Table columns={columns} data={data}/>
         </Styles>
     )
 }
